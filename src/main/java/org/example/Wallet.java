@@ -2,36 +2,36 @@ package org.example;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 
 public class Wallet {
 
     private String owner;
-    private ArrayList<String> cards;
+    private HashSet<String> cards;
 
     private ArrayList<Integer> bills;
     private ArrayList<Integer> coins;
 
     public Wallet(){
-        this.cards = new ArrayList<>();
+        this.cards = new HashSet<>();
         this.bills = new ArrayList<>();
         this.coins = new ArrayList<>();
     }
 
-    public String setOwner(String owner) {
-        this.owner = owner;
-        return getOwner();
+    public void setOwner(String owner) {
+        if (owner.isEmpty() || owner.trim().isEmpty()){
+            throw new IllegalArgumentException("The Owner can't be null or empty.");
+        } else {
+            this.owner = owner;
+        }
     }
 
     public void addCards(String card){
-        cards.add(card);
-    }
-
-    public String getOwner() {
-        return owner;
-    }
-
-    public ArrayList<String> getCards() {
-        return cards;
+        if (card.isEmpty() || card.trim().isEmpty()){
+            throw new IllegalArgumentException("The card can't be null or empty.");
+        } else {
+            cards.add(card);
+        }
     }
 
     public boolean removeCard(String card) {
@@ -39,10 +39,12 @@ public class Wallet {
     }
 
     public void addMoney(Integer nominal, boolean isCoin){
-        if (isCoin){
-            coins.add(nominal);
-        } else {
-            bills.add(nominal);
+        if (nominal > 0){
+            if (isCoin){
+                coins.add(nominal);
+            } else {
+                bills.add(nominal);
+            }
         }
     }
 
@@ -59,6 +61,11 @@ public class Wallet {
     }
 
     public boolean withdrawMoney(int amount) {
+        if (amount <= 0) {
+            System.out.println("Invalid withdrawal amount.");
+            return false;
+        }
+
         if (amount > totalMoney()) {
             System.out.println("You don't have that much money!!");
             return false;
@@ -66,18 +73,30 @@ public class Wallet {
 
         int remainingAmount = amount;
 
-        ArrayList<Integer> allMoney = new ArrayList<>();
+        ArrayList<Integer> tempBills = new ArrayList<>(bills);
+        ArrayList<Integer> tempCoins = new ArrayList<>(coins);
 
-        allMoney.addAll(bills);
-        allMoney.addAll(coins);
-        allMoney.sort(Collections.reverseOrder());
+        tempBills.sort(Collections.reverseOrder());
+        tempCoins.sort(Collections.reverseOrder());
 
-        ArrayList<Integer> toRemove = new ArrayList<>();
-        for (Integer money : allMoney) {
-            if (remainingAmount >= money) {
-                remainingAmount -= money;
-                toRemove.add(money);
+        ArrayList<Integer> toRemoveBills = new ArrayList<>();
+        ArrayList<Integer> toRemoveCoins = new ArrayList<>();
+
+        for (Integer bill : tempBills) {
+            if (remainingAmount >= bill) {
+                remainingAmount -= bill;
+                toRemoveBills.add(bill);
                 if (remainingAmount == 0) break;
+            }
+        }
+
+        if (remainingAmount > 0) {
+            for (Integer coin : tempCoins) {
+                if (remainingAmount >= coin) {
+                    remainingAmount -= coin;
+                    toRemoveCoins.add(coin);
+                    if (remainingAmount == 0) break;
+                }
             }
         }
 
@@ -86,11 +105,18 @@ public class Wallet {
             return false;
         }
 
-        bills.removeAll(toRemove);
-        coins.removeAll(toRemove);
+        bills.removeAll(toRemoveBills);
+        coins.removeAll(toRemoveCoins);
 
         System.out.println("Successfully withdraw " + amount + " money");
         return true;
+    }
+
+
+    public void clearWallet(){
+        cards.clear();
+        bills.clear();
+        coins.clear();
     }
 
     public ArrayList<Integer> getBills() {
@@ -101,23 +127,20 @@ public class Wallet {
         return coins;
     }
 
-    public static void main(String[] args) {
-        Wallet dompetJoko = new Wallet();
-        dompetJoko.setOwner("Joko");
-        dompetJoko.addCards("Credit Card");
-        dompetJoko.addCards("Debit Card");
-
-        dompetJoko.addMoney(5000, false);
-        dompetJoko.addMoney(1000, false);
-        dompetJoko.addMoney(500, true);
-        dompetJoko.addMoney(200, true);
-
-        System.out.println(dompetJoko.getCards());
-        System.out.println(dompetJoko.getOwner());
-        System.out.println("Total Money: " + dompetJoko.totalMoney());
-
-        dompetJoko.withdrawMoney(5700);
-
-        System.out.println("Remaining Money: " + dompetJoko.totalMoney());
+    public String getOwner() {
+        return owner;
     }
+
+    public HashSet<String> getCards() {
+        return cards;
+    }
+
+    public static void openConnection(){
+        System.out.println("Connected to the server....");
+    }
+
+    public static void closeConnection(){
+        System.out.println("Close connection....");
+    }
+
 }
